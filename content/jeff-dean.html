@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جيف دين: المهندس الذي جعل الحوسبة على نطاق هائل تبدو ممكنة</title>
+  <meta name="description" content="مقال عربي ممتع يشرح لماذا يُعد Jeff Dean واحدًا من أكثر الأسماء تأثيرًا في تاريخ Google والأنظمة الموزعة والذكاء الاصطناعي، من MapReduce وBigtable إلى Google Brain وTensorFlow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #5a5a5a;
+      --line: #dcdcdc;
+      --soft: #f6f6f6;
+      --soft-2: #fbfbfb;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
+      --radius: 24px;
+      --font-body: "Noto Naskh Arabic", serif;
+      --font-head: "IBM Plex Sans Arabic", "Noto Naskh Arabic", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.95;
+    }
+
+    a {
+      color: inherit;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      background: #f3f3f3;
+      padding: 0.1em 0.35em;
+      border-radius: 8px;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 48px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 6px 4px 22px;
+    }
+
+    .topbar a {
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      padding: clamp(24px, 5vw, 54px);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(0, 0, 0, 0.05), transparent 22%),
+        linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.84);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero h1,
+    h2,
+    h3,
+    .timeline-year,
+    .quote-mark {
+      font-family: var(--font-head);
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 {
+      margin: 18px 0 16px;
+      font-size: clamp(2.3rem, 6vw, 4.7rem);
+      line-height: 1.12;
+      max-width: 11ch;
+    }
+
+    .intro {
+      max-width: 760px;
+      font-size: 1.22rem;
+      color: #202020;
+      margin: 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .hero-card,
+    .section,
+    .side-card,
+    .timeline-panel,
+    .sources,
+    .quote {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .hero-card {
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, var(--soft-2) 100%);
+    }
+
+    .hero-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .fact-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .fact {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--soft);
+    }
+
+    .fact strong {
+      display: block;
+      font-family: var(--font-head);
+      margin-bottom: 5px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 24px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .content {
+      display: grid;
+      gap: 22px;
+    }
+
+    .section,
+    .sources {
+      padding: clamp(22px, 4vw, 34px);
+    }
+
+    .section h2,
+    .sources h2 {
+      margin: 0 0 12px;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      line-height: 1.3;
+    }
+
+    .section h3 {
+      margin: 18px 0 8px;
+      font-size: 1.15rem;
+    }
+
+    .section p,
+    .sources li {
+      margin: 0 0 14px;
+      font-size: 1.08rem;
+    }
+
+    .section p:last-child,
+    .sources li:last-child {
+      margin-bottom: 0;
+    }
+
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .highlight {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--soft);
+      padding: 16px;
+    }
+
+    .highlight strong {
+      display: block;
+      font-family: var(--font-head);
+      margin-bottom: 6px;
+    }
+
+    .quote {
+      padding: 24px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+    }
+
+    .quote-mark {
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .quote p {
+      margin: 0;
+      font-size: 1.16rem;
+    }
+
+    .diagram-wrap {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fcfcfc;
+      padding: 16px;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin-top: 10px;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .compare article {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: var(--soft-2);
+    }
+
+    .compare h3 {
+      margin-top: 0;
+    }
+
+    .side {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .side-card {
+      padding: 18px;
+    }
+
+    .side-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.02rem;
+    }
+
+    .side-card ul {
+      margin: 0;
+      padding: 0 18px 0 0;
+      color: var(--muted);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .timeline button {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 14px;
+      text-align: right;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    }
+
+    .timeline button:hover,
+    .timeline button[aria-pressed="true"] {
+      transform: translateY(-1px);
+      background: var(--soft);
+      border-color: #bcbcbc;
+    }
+
+    .timeline-year {
+      display: block;
+      font-size: 1.02rem;
+      margin-bottom: 3px;
+    }
+
+    .timeline-label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .timeline-panel {
+      margin-top: 14px;
+      padding: 16px;
+      min-height: 150px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    }
+
+    .timeline-panel h4 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      font-family: var(--font-head);
+    }
+
+    .timeline-panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .sources ol {
+      margin: 0;
+      padding: 0 22px 0 0;
+    }
+
+    .author-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      padding-top: 24px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .layout,
+      .highlight-grid,
+      .compare {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100%, calc(100% - 22px));
+      }
+
+      .hero {
+        border-radius: 28px;
+      }
+
+      .section,
+      .sources,
+      .hero-card,
+      .side-card,
+      .timeline-panel,
+      .quote {
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a href="../index.html">العودة إلى المقالات</a>
+      <span>سيرة تقنية</span>
+    </div>
+
+    <header class="hero">
+      <span class="eyebrow">من MapReduce إلى Google Brain</span>
+      <h1>جيف دين: المهندس الذي جعل الحوسبة على نطاق هائل تبدو ممكنة</h1>
+      <p class="intro">
+        لماذا يظهر اسم شخص واحد كلما قرأت عن <strong>MapReduce</strong> أو <strong>Bigtable</strong> أو
+        <strong>TensorFlow</strong> أو حتى بدايات <strong>Google Brain</strong>؟ لأن Jeff Dean ليس مجرد
+        مهندس كتب شيفرة ممتازة؛ بل أحد الذين غيّروا السؤال نفسه: بدل "كيف نجعل البرنامج يعمل؟" صار السؤال
+        "كيف نجعل الفكرة تعمل على آلاف الآلات ومليارات المستخدمين؟"
+      </p>
+
+      <div class="hero-grid">
+        <div class="hero-card">
+          <p>
+            وفق صفحته الرسمية في Google Research، انضم Jeff Dean إلى Google في منتصف عام 1999، ويشغل حاليًا
+            منصب <a href="https://research.google/people/jeff/">Chief Scientist</a> مع تركيز على تقدم الذكاء
+            الاصطناعي في Google DeepMind وGoogle Research. هذه الجملة وحدها تقول الكثير: الرجل بدأ من بنية
+            البحث والأنظمة الموزعة، ثم انتقل إلى قلب موجة الذكاء الاصطناعي الحديثة.
+          </p>
+        </div>
+
+        <div class="fact-grid">
+          <div class="fact">
+            <strong>1999</strong>
+            انضم إلى Google في مرحلة كانت الشركة لا تزال تُبنى من الداخل.
+          </div>
+          <div class="fact">
+            <strong>2011</strong>
+            شارك في تأسيس Google Brain، وهي خطوة مهمة في تاريخ تعلم الآلة داخل Google.
+          </div>
+          <div class="fact">
+            <strong>اليوم</strong>
+            يعمل على توجيه أبحاث AI والأنظمة التي تقف خلفها.
+          </div>
+        </div>
+      </div>
+
+      <div class="author-line">
+        <span class="chip">إعداد: GPT-5 Codex</span>
+        <span class="chip">18 مارس 2026</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="content">
+        <section class="section">
+          <h2>من هو Jeff Dean فعلًا؟</h2>
+          <p>
+            من السهل أن يُختزل Jeff Dean في صورة "العبقري الأسطوري" التي تحيط به في النكات الشهيرة داخل عالم
+            البرمجة. لكن الصورة الأهم أكثر واقعية: هو مهندس أنظمة وباحث وقائد تقني ساعد، مع زملائه، في بناء
+            طبقات كاملة من البنية التحتية التي جعلت Google تعمل بهذا الحجم.
+          </p>
+          <p>
+            الجوهر هنا ليس أنه كتب كل شيء بيده. الجوهر أنه شارك في تصميم أفكار جعلت أعمالًا شديدة التعقيد
+            أسهل في الفهم والتنفيذ: معالجة بيانات هائلة، تخزينها، تدريب نماذج تعلم عميق ضخمة، ثم تحويل كل ذلك
+            إلى أدوات يمكن لفرق كثيرة استخدامها بدل إعادة اختراع العجلة كل مرة.
+          </p>
+          <div class="highlight-grid">
+            <div class="highlight">
+              <strong>تفكير على مستوى النظام</strong>
+              لا ينظر إلى خوارزمية منفصلة، بل إلى المنظومة كلها: البيانات والآلات والأعطال والسرعة.
+            </div>
+            <div class="highlight">
+              <strong>تبسيط التعقيد</strong>
+              أفضل أعماله ليست "الأكثر بهرجة"، بل الأكثر قدرة على جعل المهام الصعبة قابلة للاستخدام اليومي.
+            </div>
+            <div class="highlight">
+              <strong>أثر ممتد</strong>
+              كثير من أفكاره داخل Google ألهمت لاحقًا أدوات ومنصات خارجها في الصناعة كلها.
+            </div>
+          </div>
+        </section>
+
+        <section class="quote">
+          <div class="quote-mark">فكرة المقال</div>
+          <p>
+            إذا أردت فهم Jeff Dean، فلا تلاحق قائمة إنجازاته فقط. انظر إلى الخيط الواصل بينها: كيف نحول
+            الحوسبة الضخمة من مشكلة نخبوية صعبة إلى بنية يمكن الاعتماد عليها ثم البناء فوقها.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>لماذا يهم؟ لأن الإنترنت الحديث لا يحب الحلول الصغيرة</h2>
+          <p>
+            عندما تكون لديك خدمة تستخدمها أعداد هائلة من الناس، فأنت لا تتعامل مع "برنامج" فقط. أنت تتعامل مع
+            فيض من البيانات، وتعطل بعض الخوادم في أي لحظة، وحاجة دائمة إلى السرعة، ورغبة في أن يظل كل شيء
+            مفهومًا للمهندسين لا مجرد كتلة مرعبة من التعقيد.
+          </p>
+          <p>
+            هنا يظهر نوع المهندسين الذين يغيرون اللعبة: ليسوا فقط من يجعلون النظام أسرع بنسبة 5%، بل من
+            يبتكرون نموذجًا جديدًا يجعل آلاف المبرمجين يعملون بطريقة أبسط. لهذا حصل Jeff Dean مع Sanjay
+            Ghemawat على <a href="https://awards.acm.org/award-recipients/dean_2879385">ACM Prize in
+            Computing لعام 2012</a> عن قيادتهما في علم وهندسة الأنظمة الموزعة على نطاق الإنترنت.
+          </p>
+          <p>
+            التأثير هنا مضاعف: حين تُحسن أداة داخلية في شركة بحجم Google، فإنك لا تُسرّع خدمة واحدة فقط، بل
+            تعيد تشكيل طريقة بناء الخدمات نفسها.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>الخط الزمني: كيف انتقل من البحث إلى الذكاء الاصطناعي؟</h2>
+          <p>
+            هذا المسار لا يتحرك في خط مستقيم، لكنه يكشف نمطًا واضحًا: كل مرحلة كانت تبني قاعدة للمرحلة التي
+            بعدها. اضغط على المحطات التالية لترى الفكرة الأساسية في كل منها.
+          </p>
+
+          <div class="timeline" id="timelineButtons">
+            <button type="button" data-title="1999: الدخول إلى Google" data-text="بدأ Jeff Dean في وقت كانت فيه Google تحتاج إلى بنية داخلية تتحمل نموًا متسارعًا جدًا. هذا وضعه مبكرًا أمام سؤال التوسع: كيف تبني أنظمة لا تنهار عندما يتضاعف الحمل باستمرار؟" aria-pressed="true">
+              <span class="timeline-year">1999</span>
+              <span class="timeline-label">الدخول إلى Google</span>
+            </button>
+            <button type="button" data-title="2004: MapReduce" data-text="مع Sanjay Ghemawat، ساعد في تقديم MapReduce كنموذج برمجي يسمح بمعالجة بيانات ضخمة عبر عدد كبير من الأجهزة، مع إخفاء تفاصيل الجدولة والأعطال والتوزيع عن المبرمج." aria-pressed="false">
+              <span class="timeline-year">2004</span>
+              <span class="timeline-label">MapReduce</span>
+            </button>
+            <button type="button" data-title="2006: Bigtable" data-text="البيانات الضخمة لا تحتاج فقط إلى معالجة، بل إلى تخزين منظم ومرن. Bigtable كان جزءًا من هذا الحل: نظام تخزين موزع لبيانات structured data على نطاق هائل." aria-pressed="false">
+              <span class="timeline-year">2006</span>
+              <span class="timeline-label">Bigtable</span>
+            </button>
+            <button type="button" data-title="2011-2012: Google Brain وDistBelief" data-text="مع صعود deep learning، شارك في تأسيس Google Brain، ثم ظهر DistBelief كإطار يسمح بتدريب شبكات عميقة ضخمة على عدد كبير من الآلات. هنا بدأ الانتقال الواضح من بنية البحث إلى بنية تعلم الآلة." aria-pressed="false">
+              <span class="timeline-year">2011-2012</span>
+              <span class="timeline-label">Google Brain وDistBelief</span>
+            </button>
+            <button type="button" data-title="2015-2016: TensorFlow" data-text="كان من المصممين الأساسيين لـ TensorFlow، ثم دافع عن فتحه كمشروع مفتوح المصدر. هذه اللحظة نقلت كثيرًا من خبرة Google الداخلية في ML systems إلى مجتمع أوسع بكثير." aria-pressed="false">
+              <span class="timeline-year">2015-2016</span>
+              <span class="timeline-label">TensorFlow</span>
+            </button>
+            <button type="button" data-title="الآن: قيادة علمية في AI" data-text="اليوم يركز على تقدم الذكاء الاصطناعي داخل Google DeepMind وGoogle Research، أي أن دوره لم يعد كتابة الأنظمة فقط، بل توجيه الأسئلة الكبيرة حول ما الذي ينبغي بناؤه أصلًا." aria-pressed="false">
+              <span class="timeline-year">الآن</span>
+              <span class="timeline-label">Chief Scientist</span>
+            </button>
+          </div>
+
+          <div class="timeline-panel" id="timelinePanel">
+            <h4>1999: الدخول إلى Google</h4>
+            <p>
+              بدأ Jeff Dean في وقت كانت فيه Google تحتاج إلى بنية داخلية تتحمل نموًا متسارعًا جدًا. هذا وضعه
+              مبكرًا أمام سؤال التوسع: كيف تبني أنظمة لا تنهار عندما يتضاعف الحمل باستمرار؟
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>الصورة الكبيرة: لماذا تتكرر بصمته في أكثر من مجال؟</h2>
+          <p>
+            لأن المشكلة الأساسية واحدة تقريبًا، حتى لو تغيّر اسم المنتج. سواء كنت تبني محرك بحث، أو تخزن
+            بيانات، أو تدرب نموذجًا عميقًا، فأنت تسأل:
+          </p>
+          <p>
+            كيف نقسم العمل؟ كيف ننسق بين آلات كثيرة؟ ماذا نفعل عندما يفشل بعضها؟ وكيف نجعل هذا كله سهلًا بما
+            يكفي ليستعمله الآخرون؟
+          </p>
+
+          <div class="diagram-wrap">
+            <svg viewBox="0 0 860 300" role="img" aria-labelledby="diagramTitle diagramDesc">
+              <title id="diagramTitle">مخطط مبسط لتسلسل أفكار Jeff Dean</title>
+              <desc id="diagramDesc">يوضح انتقال التركيز من معالجة البيانات إلى التخزين ثم إلى أنظمة تعلم الآلة.</desc>
+              <rect x="20" y="70" width="220" height="150" rx="24" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+              <rect x="320" y="70" width="220" height="150" rx="24" fill="#f8f8f8" stroke="#111111" stroke-width="2"/>
+              <rect x="620" y="70" width="220" height="150" rx="24" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+              <path d="M240 145 H320" stroke="#111111" stroke-width="2.5" stroke-dasharray="8 8"/>
+              <path d="M540 145 H620" stroke="#111111" stroke-width="2.5" stroke-dasharray="8 8"/>
+              <text x="130" y="115" text-anchor="middle" font-size="28" font-family="IBM Plex Sans Arabic, sans-serif">MapReduce</text>
+              <text x="130" y="150" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">قسّم المهمة</text>
+              <text x="130" y="180" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">وشغّلها على عدد كبير من الآلات</text>
+              <text x="430" y="115" text-anchor="middle" font-size="28" font-family="IBM Plex Sans Arabic, sans-serif">Bigtable</text>
+              <text x="430" y="150" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">نظّم البيانات</text>
+              <text x="430" y="180" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">بحجم لا يربك النظام</text>
+              <text x="730" y="115" text-anchor="middle" font-size="28" font-family="IBM Plex Sans Arabic, sans-serif">DistBelief / TensorFlow</text>
+              <text x="730" y="150" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">درّب نماذج أكبر</text>
+              <text x="730" y="180" text-anchor="middle" font-size="20" font-family="Noto Naskh Arabic, serif">على بنية موزعة مرنة</text>
+            </svg>
+            <div class="caption">
+              الرسم لا يقول إن Jeff Dean عمل وحده، بل يوضح كيف تكرر نوع التفكير نفسه عبر مراحل مختلفة من
+              الحوسبة الحديثة.
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>أشهر أعماله... ولكن بلغة مفهومة</h2>
+
+          <h3>1. MapReduce: حين يصبح التوزيع تلقائيًا</h3>
+          <p>
+            ورقة <a href="https://www.usenix.org/conference/osdi-04/mapreduce-simplified-data-processing-large-clusters">MapReduce</a>
+            من 2004 صارت كلاسيكية لأن فكرتها شديدة البساطة والأثر: بدل أن يكتب المبرمج كل تفاصيل التوزيع
+            والتوازي والتعامل مع الأعطال، يحدد فقط دالتين تقريبًا: <code>map</code> و<code>reduce</code>.
+            بعدها يتولى النظام بقية الفوضى.
+          </p>
+          <p>
+            هذه ليست مجرد حيلة أنيقة. إنها نقلت عبء التعقيد من المبرمج الفرد إلى البنية التحتية نفسها. لذلك
+            أثرت لاحقًا في مشاريع كثيرة خارج Google، وأصبحت جزءًا من طريقة تفكير الصناعة في معالجة البيانات.
+          </p>
+
+          <h3>2. Bigtable: لأن البيانات تحتاج بيتًا مناسبًا</h3>
+          <p>
+            بعد أن تعالج البيانات، يبقى سؤال التخزين. ورقة
+            <a href="https://www.usenix.org/conference/osdi-06/bigtable-distributed-storage-system-structured-data">Bigtable</a>
+            في 2006 شرحت نظامًا موزعًا لإدارة بيانات structured data على نطاق ضخم. الفكرة ليست أنه قاعدة بيانات
+            "سحرية"، بل أنه حل عملي لواقع لا ينتهي فيه الحجم عند جيجابايت أو تيرابايت قليلة.
+          </p>
+          <p>
+            هذا النوع من الأنظمة مهم لأن كثيرًا من المنتجات الكبيرة لا تنهار بسبب الخوارزمية، بل بسبب عدم وجود
+            طبقة تخزين مناسبة لطبيعة العمل والحجم المطلوب.
+          </p>
+
+          <h3>3. DistBelief وGoogle Brain: عندما كبرت النماذج قبل أن تصبح موضة عامة</h3>
+          <p>
+            قبل أن تصبح النماذج الضخمة حديث الجميع، كانت هناك مشكلة تقنية شاقة: كيف تدرب شبكة عميقة كبيرة جدًا
+            على عدد هائل من الأنوية والآلات؟ ورقة
+            <a href="https://research.google/pubs/pub40565">Large Scale Distributed Deep Networks</a>
+            في 2012 عرضت إطار <strong>DistBelief</strong> وخوارزميات مثل <strong>Downpour SGD</strong> لهذا
+            الغرض.
+          </p>
+          <p>
+            وفي العام نفسه، جاءت ورقة
+            <a href="https://research.google/pubs/building-high-level-features-using-large-scale-unsupervised-learning/">Building
+            High-Level Features Using Large-Scale Unsupervised Learning</a> التي اشتهرت شعبيًا بقصة "cat neuron".
+            لم تكن الحكاية عن القطط بحد ذاتها، بل عن أن الأنظمة الكبيرة تستطيع تعلم تمثيلات عالية المستوى من
+            بيانات غير معنونة عندما تتوفر لها بنية تدريب مناسبة.
+          </p>
+
+          <h3>4. TensorFlow: تحويل الخبرة الداخلية إلى لغة مشتركة</h3>
+          <p>
+            لو بقيت أدوات التعلم العميق حكرًا على المختبرات الضخمة، لما تسارع المجال بهذا الشكل. هنا يأتي دور
+            <a href="https://research.google/pubs/tensorflow-a-system-for-large-scale-machine-learning/">TensorFlow</a>.
+            الورقة تشرح نظامًا واسع النطاق مبنيًا على dataflow graphs، لكن الأثر الأهم كان عمليًا: إطار يمكن أن
+            يستخدمه باحثون ومطورون حول العالم، لا فقط داخل Google.
+          </p>
+          <p>
+            وهذا يفسر لماذا يُنظر إلى Jeff Dean ليس فقط كصاحب أفكار بحثية، بل كمن يعرف كيف يجعل الفكرة أداة.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>الأهم من الإنجازات: أسلوب التفكير</h2>
+          <p>
+            لو أردنا تلخيص قيمة Jeff Dean في سطر واحد، فربما يكون هذا السطر: <strong>هو متخصص في جعل الأنظمة
+            الكبيرة قابلة للعمل، ثم قابلة للاستخدام، ثم قابلة للنمو أكثر.</strong>
+          </p>
+          <div class="compare">
+            <article>
+              <h3>مهندس جيد</h3>
+              <p>
+                يحل المشكلة الحالية بكفاءة، ويجعل النظام يعمل اليوم.
+              </p>
+            </article>
+            <article>
+              <h3>مهندس على طريقة Jeff Dean</h3>
+              <p>
+                يعيد صياغة المشكلة بحيث يستطيع كثيرون حلها مرارًا، وعلى نطاق أكبر، وبتكلفة ذهنية أقل.
+              </p>
+            </article>
+          </div>
+          <p>
+            لهذا يرتبط اسمه كثيرًا بفكرة <em>leverage</em>: الشيفرة التي تكتبها مرة، إذا كانت في الطبقة الصحيحة
+            من النظام، يمكن أن تؤثر في آلاف المشاريع بعد ذلك.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>هل هو "بطل فردي"؟ لا، وهذه نقطة مهمة</h2>
+          <p>
+            أي قراءة ناضجة لتاريخ التقنية يجب أن تتجنب فكرة البطل الوحيد. الأعمال المرتبطة بـ Jeff Dean جاءت
+            دائمًا ضمن فرق قوية وبالتعاون مع أسماء كبيرة مثل Sanjay Ghemawat وAndrew Ng وكثيرين غيرهم. حتى
+            الجوائز الرسمية نفسها تصف إنجازه بوصفه قيادة في العلم والهندسة، لا سحرًا فرديًا منفصلًا عن الآخرين.
+          </p>
+          <p>
+            لكن هذا لا يقلل من أثره؛ بل يوضحه. بعض الأشخاص لا يبرزون فقط لأنهم أذكى من الجميع، بل لأنهم
+            يرفعون سقف الفريق كله، ويصممون أفكارًا تعطي الآخرين قدرة أكبر على البناء.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>الخلاصة: لماذا يستحق مقالًا كاملًا؟</h2>
+          <p>
+            لأن Jeff Dean يمثل نوعًا نادرًا من المهندسين: من يتحركون بين أعماق الأنظمة الموزعة وعالم الذكاء
+            الاصطناعي من دون أن يفقدوا الحس العملي. في سيرته ترى تاريخًا مصغرًا لتحول Google نفسها: من شركة
+            تبني محرك بحث ضخمًا، إلى شركة تبني بنية تحتية للبيانات، إلى لاعب أساسي في أبحاث AI.
+          </p>
+          <p>
+            وإذا كان هناك درس واحد يمكن أخذه من مساره، فهو أن التأثير الحقيقي في التقنية لا يأتي دائمًا من
+            بناء المنتج اللامع على السطح، بل من بناء الطبقة العميقة التي تجعل أشياء كثيرة أخرى ممكنة.
+          </p>
+        </section>
+
+        <section class="sources">
+          <h2>المصادر والمراجع</h2>
+          <ol>
+            <li>
+              <a href="https://research.google/people/jeff/">Jeffrey Dean - Google Research</a>
+              - الصفحة الرسمية الأحدث لنبذته ودوره الحالي في Google DeepMind وGoogle Research.
+            </li>
+            <li>
+              <a href="https://awards.acm.org/award-recipients/dean_2879385">Jeffrey A. Dean - ACM Awards</a>
+              - مفيد لتوثيق الجوائز، الخلفية الأكاديمية، ووصف أثره في الأنظمة الموزعة.
+            </li>
+            <li>
+              <a href="https://www.usenix.org/conference/osdi-04/mapreduce-simplified-data-processing-large-clusters">MapReduce: Simplified Data Processing on Large Clusters</a>
+              - الورقة الكلاسيكية التي تشرح لماذا صار توزيع معالجة البيانات أبسط بكثير.
+            </li>
+            <li>
+              <a href="https://www.usenix.org/conference/osdi-06/bigtable-distributed-storage-system-structured-data">Bigtable: A Distributed Storage System for Structured Data</a>
+              - مصدر أساسي لفهم طبقة التخزين التي رافقت موجة البيانات الضخمة داخل Google.
+            </li>
+            <li>
+              <a href="https://research.google/pubs/pub40565">Large Scale Distributed Deep Networks</a>
+              - يشرح DistBelief وكيف بدأ تدريب النماذج الكبيرة على بنية موزعة قبل طفرة LLMs بسنوات.
+            </li>
+            <li>
+              <a href="https://research.google/pubs/building-high-level-features-using-large-scale-unsupervised-learning/">Building High-Level Features Using Large-Scale Unsupervised Learning</a>
+              - مرجع مهم لمرحلة Google Brain المبكرة وتجارب التعلم غير المراقب واسعة النطاق.
+            </li>
+            <li>
+              <a href="https://research.google/pubs/tensorflow-a-system-for-large-scale-machine-learning/">TensorFlow: A System for Large-Scale Machine Learning</a>
+              - يوضح كيف تحولت خبرة الأنظمة الموزعة إلى منصة عملية للتعلم الآلي واسعة الانتشار.
+            </li>
+            <li>
+              <a href="https://www.acm.org/articles/bulletins/2013/march/dean-ghemawat-2012-infosys-award">ACM, Infosys Foundation Honor Google Developers for Innovations that Boost Online Search Capabilities</a>
+              - خلفية صحفية مختصرة تشرح لماذا اعتُبر عمل Dean وGhemawat نقطة تحول في الصناعة.
+            </li>
+          </ol>
+        </section>
+      </main>
+
+      <aside class="side">
+        <section class="side-card">
+          <h3>لماذا هذا المقال مهم؟</h3>
+          <ul>
+            <li>لأنه يربط بين تاريخ الأنظمة الموزعة وتاريخ AI الحديث.</li>
+            <li>لأنه يوضح أن البنية التحتية تصنع الفارق بقدر ما تصنعه الخوارزميات.</li>
+            <li>لأنه يشرح اسمًا يتكرر كثيرًا من دون أن يبقى مجرد أسطورة مبهمة.</li>
+          </ul>
+        </section>
+
+        <section class="side-card">
+          <h3>كلمات مفتاحية</h3>
+          <div class="fact-grid">
+            <div class="fact"><strong>MapReduce</strong> معالجة بيانات على نطاق واسع</div>
+            <div class="fact"><strong>Bigtable</strong> تخزين موزع لبيانات منظمة</div>
+            <div class="fact"><strong>DistBelief</strong> تدريب عميق موزع</div>
+            <div class="fact"><strong>TensorFlow</strong> منصة ML مفتوحة المصدر</div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="footer-note">
+      directed-slop - مقال عربي تقني بتصميم بسيط ومحتوى تفسيري
+    </div>
+  </div>
+
+  <script>
+    const buttons = Array.from(document.querySelectorAll('#timelineButtons button'));
+    const panel = document.getElementById('timelinePanel');
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        buttons.forEach((item) => item.setAttribute('aria-pressed', 'false'));
+        button.setAttribute('aria-pressed', 'true');
+        panel.innerHTML = `
+          <h4>${button.dataset.title}</h4>
+          <p>${button.dataset.text}</p>
+        `;
+      });
+    });
+  </script>
+</body>
+</html>
