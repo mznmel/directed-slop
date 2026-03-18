@@ -1,3 +1,5 @@
+**[Live Site](https://mznmel.github.io/directed-slop/)**
+
 <div dir="rtl" align="right">
 
 ## directed-slop
@@ -48,3 +50,15 @@ content/
 └── ...
 instructions.md          # Full article generation guidelines
 ```
+
+## Contributing
+
+Want to add an article? Contributions are welcome!
+
+1. **Fork** this repository
+2. **Generate** a new article using the prompt template above and the guidelines in [instructions.md](instructions.md)
+3. **Place** the generated HTML file in the `content/` directory
+4. **Update** `index.html` to link to your new article
+5. **Submit a Pull Request** with a brief description of the article topic
+
+Please make sure your article follows the existing design and content conventions before submitting.
