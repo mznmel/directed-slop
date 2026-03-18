@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ابنِ GPT من الصفر في 20 خطوة بسيطة</title>
+  <meta name="description" content="مقال عربي ممتع يشرح بناء GPT من الصفر في 20 خطوة بسيطة، مستوحى من فيديو Andrej Karpathy: من Tiny Shakespeare والترميز إلى self-attention وTransformer والتوليد token by token.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&amp;family=Changa:wght@500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #555555;
+      --line: #e0e0e0;
+      --soft: #f6f6f6;
+      --soft-2: #fbfbfb;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.05);
+      --radius: 24px;
+      --font-body: "Noto Naskh Arabic", serif;
+      --font-head: "Changa", "Noto Naskh Arabic", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.95;
+    }
+
+    a {
+      color: inherit;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    code,
+    pre code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 30px));
+      margin: 0 auto;
+      padding: 22px 0 48px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 4px 4px 22px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .topbar a {
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      padding: clamp(24px, 5vw, 54px);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(0, 0, 0, 0.05), transparent 22%),
+        linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.84);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero h1,
+    h2,
+    h3,
+    .metric-card strong,
+    .step-no,
+    .phase-number,
+    .quote-mark {
+      font-family: var(--font-head);
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 {
+      margin: 18px 0 16px;
+      font-size: clamp(2.4rem, 6vw, 4.9rem);
+      line-height: 1.12;
+      max-width: 9.5ch;
+    }
+
+    .intro {
+      max-width: 790px;
+      font-size: 1.22rem;
+      color: #202020;
+      margin: 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .note-card,
+    .metric-card,
+    .section,
+    .side-card,
+    .step-card,
+    .demo-card,
+    .snippet,
+    .compare-card,
+    .sources,
+    .quote {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .note-card {
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, var(--soft-2) 100%);
+    }
+
+    .note-card p {
+      margin: 0 0 14px;
+      font-size: 1.06rem;
+    }
+
+    .note-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .metric-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .metric-card {
+      padding: 16px;
+      background: var(--soft);
+    }
+
+    .metric-card strong {
+      display: block;
+      font-size: 1.32rem;
+      margin-bottom: 6px;
+    }
+
+    .metric-card span {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .author-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 290px;
+      gap: 24px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .content {
+      display: grid;
+      gap: 22px;
+    }
+
+    .side {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .side-card {
+      padding: 18px;
+    }
+
+    .side-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.02rem;
+    }
+
+    .side-card ul,
+    .compare-card ul {
+      margin: 0;
+      padding: 0 18px 0 0;
+      color: var(--muted);
+    }
+
+    .side-card li,
+    .compare-card li {
+      margin-bottom: 10px;
+    }
+
+    .side-card li:last-child,
+    .compare-card li:last-child {
+      margin-bottom: 0;
+    }
+
+    .section,
+    .sources {
+      padding: clamp(22px, 4vw, 34px);
+    }
+
+    .section h2,
+    .sources h2 {
+      margin: 0 0 12px;
+      font-size: clamp(1.55rem, 3vw, 2.1rem);
+      line-height: 1.34;
+    }
+
+    .section h3 {
+      margin: 18px 0 8px;
+      font-size: 1.16rem;
+    }
+
+    .section p,
+    .sources li,
+    .step-card p,
+    .demo-panel p {
+      margin: 0 0 14px;
+      font-size: 1.08rem;
+    }
+
+    .section p:last-child,
+    .sources li:last-child,
+    .step-card p:last-child,
+    .demo-panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .quote {
+      padding: 24px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+    }
+
+    .quote-mark {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .quote p {
+      margin: 0;
+      font-size: 1.16rem;
+    }
+
+    .diagram {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      background: #fcfcfc;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin-top: 10px;
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .phase-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--soft);
+      padding: 14px;
+    }
+
+    .phase-number {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .phase-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .step-group + .step-group {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .step-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .step-card {
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    }
+
+    .step-no {
+      font-size: 1.85rem;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .step-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    .demo-card {
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    }
+
+    .range-wrap {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .range-wrap label {
+      font-size: 1rem;
+    }
+
+    .range-wrap input {
+      width: 100%;
+      accent-color: #111111;
+    }
+
+    .token-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .token {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease, color 180ms ease;
+    }
+
+    .token:hover {
+      transform: translateY(-1px);
+    }
+
+    .token.is-visible {
+      background: var(--soft);
+      border-color: #c2c2c2;
+    }
+
+    .token.is-current {
+      background: #111111;
+      border-color: #111111;
+      color: #ffffff;
+    }
+
+    .token.is-hidden {
+      opacity: 0.38;
+    }
+
+    .matrix {
+      display: grid;
+      gap: 6px;
+      margin-top: 18px;
+    }
+
+    .matrix-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+    }
+
+    .cell.faint {
+      background: #f2f2f2;
+    }
+
+    .cell.on {
+      background: #111111;
+      border-color: #111111;
+    }
+
+    .demo-panel {
+      border: 1px dashed var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      background: var(--soft-2);
+    }
+
+    .demo-panel strong {
+      font-family: var(--font-head);
+      font-weight: 700;
+    }
+
+    .snippet-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .snippet {
+      overflow: hidden;
+    }
+
+    .snippet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft-2);
+    }
+
+    .snippet-head h3 {
+      margin: 0;
+      font-size: 1.02rem;
+    }
+
+    .copy-btn {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+
+    .copy-btn:hover {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      background: #ffffff;
+      direction: ltr;
+      text-align: left;
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .compare-card {
+      padding: 18px;
+      background: var(--soft-2);
+    }
+
+    .compare-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    .compare-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .sources ol {
+      margin: 0;
+      padding: 0 22px 0 0;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      padding-top: 24px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .layout,
+      .phase-grid,
+      .step-columns,
+      .demo-grid,
+      .compare {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100%, calc(100% - 20px));
+      }
+
+      .hero {
+        border-radius: 28px;
+      }
+
+      .note-card,
+      .metric-card,
+      .section,
+      .side-card,
+      .step-card,
+      .demo-card,
+      .snippet,
+      .compare-card,
+      .sources,
+      .quote,
+      .demo-panel {
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a href="../index.html">العودة إلى المقالات</a>
+      <span>شرح عملي</span>
+    </div>
+
+    <header class="hero">
+      <span class="eyebrow">من Tiny Shakespeare إلى decoder-only Transformer</span>
+      <h1>ابنِ GPT من الصفر في 20 خطوة بسيطة</h1>
+      <p class="intro">
+        كيف يمكن لملف نصي صغير أن يتحول إلى نموذج يكتب جملًا جديدة حرفًا بعد حرف؟ هذا هو السحر الذي يقدمه
+        فيديو <a href="https://www.youtube.com/watch?v=kCc8FmEb1nY">Andrej Karpathy</a>: ليس لأنه يبني
+        <strong>ChatGPT</strong> كاملًا، بل لأنه يفتح الغطاء عن قلبه الأساسي ويحوّله من "صندوق أسود" إلى
+        وصفة يمكن تتبعها، وفهمها، ثم إعادة بنائها.
+      </p>
+
+      <div class="hero-grid">
+        <div class="note-card">
+          <p>
+            الفكرة الجميلة في الشرح أن Karpathy لا يبدأ من مكتبة ضخمة ولا من كود سحري. يبدأ من ملف فارغ تقريبًا،
+            ثم يضيف القطع واحدة تلو الأخرى: dataset صغيرة، tokenizer بسيط، baseline متواضع، ثم
+            <strong>self-attention</strong>، ثم <strong>Transformer</strong> كامل، ثم توليد نص جديد.
+          </p>
+          <p>
+            هذا المقال يعيد الرحلة نفسها في <strong>20 خطوة</strong> واضحة، مع الاستفادة من نص الفيديو،
+            ومستودع <a href="https://github.com/karpathy/build-nanogpt">build-nanogpt</a>، وورقة
+            <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>، حتى ترى أين تبدأ
+            الفكرة، وأين تكبر، وما الذي ينقصها قبل أن تتحول إلى مساعد حواري حقيقي.
+          </p>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <strong>20 خطوة</strong>
+            <span>من قراءة النص الخام إلى توليد token جديد كل مرة.</span>
+          </div>
+          <div class="metric-card">
+            <strong>65 رمزًا</strong>
+            <span>تقريبًا هي vocabulary الأحرف في Tiny Shakespeare داخل الشرح.</span>
+          </div>
+          <div class="metric-card">
+            <strong>فكرة واحدة</strong>
+            <span>GPT ليس كاتبًا غامضًا؛ إنه متنبئ ممتاز بما يجب أن يأتي لاحقًا.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="author-line">
+        <span class="chip">إعداد: GPT-5 Codex</span>
+        <span class="chip">18 مارس 2026</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="content">
+        <section class="quote">
+          <div class="quote-mark">الفكرة التي يجب أن تبقى معك</div>
+          <p>
+            إذا فهمت كيف يحول GPT النص إلى أرقام، ثم الأرقام إلى تمثيلات، ثم التمثيلات إلى توقع للرمز التالي،
+            فقد كسرت أصعب جزء من اللغز. كل ما يأتي بعد ذلك هو تكبير للوصفة وتحسينها.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>ما هو GPT أصلًا؟</h2>
+          <p>
+            اسم <strong>GPT</strong> اختصار لـ <strong>Generatively Pretrained Transformer</strong>. الترجمة
+            العملية لهذا الاسم ليست "آلة تفهم العالم" بقدر ما هي "نموذج تعلّم أن يكمل السلسلة". أنت تعطيه
+            بداية نص، وهو يحاول تخمين الرمز التالي، ثم الذي بعده، ثم الذي بعده.
+          </p>
+          <p>
+            في نسخة Karpathy التعليمية، النموذج ليس مدربًا على الإنترنت كله، بل على
+            <a href="https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt">Tiny Shakespeare</a>.
+            كذلك هو <strong>character-level</strong> لا <strong>subword-level</strong>، وهذا يجعله أبسط
+            للفهم حتى لو كان أقل كفاءة من GPT الحقيقي الذي يستخدم tokenizers مثل
+            <a href="https://github.com/openai/tiktoken">tiktoken</a>.
+          </p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 920 240" aria-label="مخطط مبسط لتدفق بناء GPT">
+              <rect x="18" y="62" width="156" height="92" rx="22" fill="#ffffff" stroke="#111111" stroke-width="2"></rect>
+              <rect x="204" y="62" width="156" height="92" rx="22" fill="#f6f6f6" stroke="#111111" stroke-width="2"></rect>
+              <rect x="390" y="62" width="156" height="92" rx="22" fill="#ffffff" stroke="#111111" stroke-width="2"></rect>
+              <rect x="576" y="62" width="156" height="92" rx="22" fill="#f6f6f6" stroke="#111111" stroke-width="2"></rect>
+              <rect x="762" y="62" width="140" height="92" rx="22" fill="#ffffff" stroke="#111111" stroke-width="2"></rect>
+
+              <text x="96" y="98" text-anchor="middle" font-size="22" font-family="Noto Naskh Arabic" fill="#111111">نص خام</text>
+              <text x="96" y="126" text-anchor="middle" font-size="18" font-family="Noto Naskh Arabic" fill="#555555">Shakespeare</text>
+
+              <text x="282" y="98" text-anchor="middle" font-size="22" font-family="Noto Naskh Arabic" fill="#111111">ترميز</text>
+              <text x="282" y="126" text-anchor="middle" font-size="18" font-family="Noto Naskh Arabic" fill="#555555">chars → ids</text>
+
+              <text x="468" y="98" text-anchor="middle" font-size="22" font-family="Noto Naskh Arabic" fill="#111111">Embeddings</text>
+              <text x="468" y="126" text-anchor="middle" font-size="18" font-family="Noto Naskh Arabic" fill="#555555">مع الموضع</text>
+
+              <text x="654" y="98" text-anchor="middle" font-size="22" font-family="Noto Naskh Arabic" fill="#111111">Masked</text>
+              <text x="654" y="126" text-anchor="middle" font-size="18" font-family="Noto Naskh Arabic" fill="#555555">Attention</text>
+
+              <text x="832" y="98" text-anchor="middle" font-size="22" font-family="Noto Naskh Arabic" fill="#111111">Logits</text>
+              <text x="832" y="126" text-anchor="middle" font-size="18" font-family="Noto Naskh Arabic" fill="#555555">الرمز التالي</text>
+
+              <line x1="174" y1="108" x2="204" y2="108" stroke="#111111" stroke-width="2"></line>
+              <line x1="360" y1="108" x2="390" y2="108" stroke="#111111" stroke-width="2"></line>
+              <line x1="546" y1="108" x2="576" y2="108" stroke="#111111" stroke-width="2"></line>
+              <line x1="732" y1="108" x2="762" y2="108" stroke="#111111" stroke-width="2"></line>
+              <polygon points="204,108 194,102 194,114" fill="#111111"></polygon>
+              <polygon points="390,108 380,102 380,114" fill="#111111"></polygon>
+              <polygon points="576,108 566,102 566,114" fill="#111111"></polygon>
+              <polygon points="762,108 752,102 752,114" fill="#111111"></polygon>
+            </svg>
+            <p class="caption">
+              هذا هو المسار كله باختصار: النص يتحول إلى أرقام، الأرقام تتحول إلى تمثيلات، التمثيلات تتبادل
+              المعلومات عبر attention مقنّع، ثم تظهر احتمالات الرمز التالي.
+            </p>
+          </div>
+
+          <div class="phase-grid">
+            <article class="phase-card">
+              <span class="phase-number">1-4</span>
+              <p>حوّل النص إلى مادة خام يمكن للحاسوب عدّها.</p>
+            </article>
+            <article class="phase-card">
+              <span class="phase-number">5-8</span>
+              <p>ابنِ tokenizer، split، وcontext window للتدريب.</p>
+            </article>
+            <article class="phase-card">
+              <span class="phase-number">9-12</span>
+              <p>ابدأ بنموذج متواضع ثم أعطه embeddings والموضع.</p>
+            </article>
+            <article class="phase-card">
+              <span class="phase-number">13-16</span>
+              <p>اسمح للتوكنات أن تتحدث، لكن من دون النظر إلى المستقبل.</p>
+            </article>
+            <article class="phase-card">
+              <span class="phase-number">17-20</span>
+              <p>ثبّت التدريب، كرر البلوكات، ثم كبّر الوصفة إلى GPT حقيقي.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="steps">
+          <h2>الرحلة كاملة في 20 خطوة</h2>
+          <p>
+            لنقسّم الطريق إلى خمس محطات. الفكرة ليست الحفظ، بل رؤية كيف تتراكم القطع الصغيرة حتى تنتج نموذجًا
+            يبدو "ذكيًا" رغم أنه بُني من عمليات بسيطة جدًا.
+          </p>
+
+          <div class="step-group">
+            <h3>المحطة الأولى: اجعل النص قابلًا للحساب</h3>
+            <div class="step-columns">
+              <article class="step-card">
+                <div class="step-no">01</div>
+                <h3>ابدأ بلعبة صغيرة، لا بالإنترنت كله</h3>
+                <p>
+                  Karpathy يختار مثالًا تعليميًا بدلًا من مطاردة نموذج عملاق من أول دقيقة. الفكرة هنا مهمة:
+                  إذا أردت فهم الآلية، فصغّر العالم حتى تراه بوضوح.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">02</div>
+                <h3>اجلب Tiny Shakespeare</h3>
+                <p>
+                  بدل مليارات الجمل، نأخذ نصًا حجمه نحو 1MB من أعمال Shakespeare. النتيجة: dataset تكفي لإظهار
+                  patterns لغوية حقيقية، لكنها ما تزال قابلة للتجريب السريع.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">03</div>
+                <h3>اقرأ الملف كسلسلة واحدة</h3>
+                <p>
+                  أول خطوة ليست "ذكاء اصطناعي" إطلاقًا، بل <strong>data plumbing</strong>: اقرأ النص كله
+                  داخل string واحد. الآن صار لديك تسلسل خام، وهذا بالضبط ما سيحاول النموذج تقليده.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">04</div>
+                <h3>استخرج vocabulary من الأحرف الفريدة</h3>
+                <p>
+                  في الشرح، عدد الرموز الفريدة يقارب <strong>65</strong> character. هذه هي الأبجدية الصغيرة
+                  التي سيعمل داخلها النموذج: مسافة، أسطر جديدة، أحرف كبيرة وصغيرة، وبعض العلامات.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div class="step-group">
+            <h3>المحطة الثانية: حوّل الحروف إلى أرقام ثم إلى أمثلة تدريب</h3>
+            <div class="step-columns">
+              <article class="step-card">
+                <div class="step-no">05</div>
+                <h3>ابنِ encode وdecode</h3>
+                <p>
+                  هنا يكتب Karpathy أبسط tokenizer ممكن: كل character يقابله integer. وإذا كان هذا يبدو بدائيًا،
+                  فهذا مقصود. البساطة هنا تجعل كل شيء لاحقًا مفهومًا.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">06</div>
+                <h3>حوّل النص كله إلى tensor من الأرقام</h3>
+                <p>
+                  بعد الترميز، يصبح Shakespeare سلسلة طويلة من integers. وهذا هو التحول الحقيقي: اللغة لم تعد
+                  كلمات رومانسية، بل بيانات قابلة للحساب داخل <strong>PyTorch</strong>.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">07</div>
+                <h3>قسّم dataset إلى train وvalidation</h3>
+                <p>
+                  نحتفظ بجزء لا يراه النموذج أثناء التدريب حتى نعرف: هل تعلّم pattern فعلًا، أم فقط حفظ السطور
+                  التي شاهدها؟ هذه خطوة صغيرة، لكنها تفصل التجربة الجيدة عن الخدعة.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">08</div>
+                <h3>اختر block size أو context length</h3>
+                <p>
+                  النموذج لا يرى التاريخ كله دفعة واحدة. هو ينظر عبر نافذة محدودة من الماضي. هذه النافذة تسمى
+                  <strong>block size</strong>، وهي تحدد كم سياقًا يحق له استخدامه أثناء التنبؤ.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div class="step-group">
+            <h3>المحطة الثالثة: ابنِ أول نسخة تتنبأ، ثم علّمها أين تقف</h3>
+            <div class="step-columns">
+              <article class="step-card">
+                <div class="step-no">09</div>
+                <h3>كوّن أمثلة x وy داخل batch</h3>
+                <p>
+                  كل chunk من النص يخفي عدّة أمثلة تدريب. المدخلات <strong>x</strong> هي السياق الحالي،
+                  والأهداف <strong>y</strong> هي السلسلة نفسها لكن مزاحة خطوة واحدة إلى الأمام.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">10</div>
+                <h3>ابدأ بـ bigram baseline</h3>
+                <p>
+                  قبل Transformer، يمر الشرح على نموذج أبسط بكثير: bigram language model. هذا النموذج يسأل
+                  سؤالًا متواضعًا: إذا رأيت هذا الحرف الآن، فما الحرف الذي يأتي بعده غالبًا؟
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">11</div>
+                <h3>أدخل token embeddings</h3>
+                <p>
+                  الرقم وحده لا يكفي. لذا يتحول كل token إلى متجه dense يحمل معنى متعلمًا. هكذا يتوقف النموذج
+                  عن رؤية الرمز كمعرّف جامد، ويبدأ في رؤيته كتمثيل يمكن تحريكه حسابيًا.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">12</div>
+                <h3>أضف positional embeddings</h3>
+                <p>
+                  لو أعطيت النموذج tokens بلا مواضع، فلن يعرف الفرق بين بداية الجملة ونهايتها. لذلك نضيف متجهًا
+                  آخر يخبره: "أنت هنا في الموضع الثالث أو السابع أو العشرين".
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div class="step-group">
+            <h3>المحطة الرابعة: هنا تبدأ التوكنات بالكلام مع بعضها</h3>
+            <div class="step-columns">
+              <article class="step-card">
+                <div class="step-no">13</div>
+                <h3>اسمح لكل token أن ينظر إلى الآخرين: self-attention</h3>
+                <p>
+                  هذه هي القفزة الكبرى في الورقة الأصلية. بدل معالجة كل موضع في عزلة، يستطيع كل token أن يسأل:
+                  من المهم في السياق الحالي؟ ومن يجب أن أستمع إليه أكثر؟
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">14</div>
+                <h3>امنع النظر إلى المستقبل عبر causal mask</h3>
+                <p>
+                  GPT يجب أن يكتب من اليسار إلى اليمين. لذلك نضع مثلثًا حجريًا أمامه: الرمز الحالي يرى الماضي
+                  فقط، ولا يحق له التلصص على الإجابة الحقيقية القادمة.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">15</div>
+                <h3>قسّم الانتباه إلى أكثر من رأس: multi-head attention</h3>
+                <p>
+                  رأس واحد جيد، لكن عدّة رؤوس أفضل. كأنك أعطيت النموذج أكثر من قناة استماع: واحدة تراقب
+                  الإيقاع، وأخرى بنية الكلمة، وثالثة العلاقات البعيدة.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">16</div>
+                <h3>بعد التواصل، أضف لحظة تفكير محلية</h3>
+                <p>
+                  الانتباه هو مرحلة "تبادل المعلومات". ثم تأتي طبقة <strong>feed-forward</strong> كي يعالج كل
+                  token ما جمعه بهدوء وبشكل مستقل. هذا الجزء يبدو بسيطًا، لكنه أساسي في قوة البلوك.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div class="step-group">
+            <h3>المحطة الخامسة: ثبّت البنية، درّبها، ثم تخيّل النسخة الأكبر</h3>
+            <div class="step-columns">
+              <article class="step-card">
+                <div class="step-no">17</div>
+                <h3>أضف residual connections وlayer norm وdropout</h3>
+                <p>
+                  عندما يبدأ النموذج في العمق، تحتاج إلى هندسة تمنعه من الانهيار. هذه العناصر الثلاثة تساعد على
+                  الاستقرار، وتحافظ على تدفق الإشارة، وتخفف من overfitting.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">18</div>
+                <h3>كرر البلوك أكثر من مرة</h3>
+                <p>
+                  الآن فقط تحصل على <strong>Transformer</strong> حقيقي: attention ثم feed-forward، مكرران طبقة
+                  فوق طبقة. في النهاية تضيف linear head كي تتحول التمثيلات إلى logits على vocabulary كلها.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">19</div>
+                <h3>درّب، راقب loss، ثم ولّد نصًا جديدًا</h3>
+                <p>
+                  مع <strong>AdamW</strong> وقياس loss على train وvalidation، يبدأ النموذج بالتعلم تدريجيًا.
+                  وبعدها تأتي اللحظة الممتعة: نعطيه prompt صغيرًا، فيكمل token بعد token بنص جديد لم يكن موجودًا
+                  حرفيًا في الملف.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <div class="step-no">20</div>
+                <h3>افهم ما يفصل هذه اللعبة عن ChatGPT</h3>
+                <p>
+                  الوصفة الأساسية نفسها تقريبًا، لكن النسخ الكبرى تكبر في ثلاثة اتجاهات: tokenizer أفضل،
+                  بيانات وتدريب أضخم بكثير، ثم مرحلة <strong>alignment</strong> لاحقة تجعل النموذج مساعدًا
+                  يجيب، لا مجرد document completer يواصل النص بلا هدف.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>جرّب المثلث بنفسك: كيف يرى GPT الماضي فقط؟</h2>
+          <p>
+            أكثر جزء يبدو "سحريًا" في Transformer هو self-attention، لكن داخل GPT هناك قاعدة شديدة البساطة:
+            الرمز الحالي لا يحق له رؤية المستقبل. حرّك المؤشر أو اضغط على أي token، وسترى من يقدر على رؤيته.
+          </p>
+
+          <div class="demo-grid">
+            <div class="demo-card">
+              <div class="range-wrap">
+                <label for="tokenRange">الموضع الحالي: <span id="rangeValue">4</span> من 6</label>
+                <input type="range" id="tokenRange" min="0" max="5" value="3">
+              </div>
+              <div class="token-row" id="tokenRow"></div>
+              <div class="matrix" id="matrix"></div>
+            </div>
+
+            <div class="demo-panel">
+              <p id="demoText"></p>
+              <p>
+                المربعات الداكنة تمثل الأجزاء التي يُسمح للرمز الحالي بالانتباه إليها. لهذا يسمى النموذج
+                <strong>autoregressive</strong>: يكتب اعتمادًا على ما كُتب فعلًا، لا على ما سيأتي بعد لحظة.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>أربع لقطات كود تكشف الفكرة بسرعة</h2>
+          <p>
+            إذا اضطررت إلى تلخيص الفيديو كله في عدد قليل من الأسطر، فهذه الأسطر هي العمود الفقري للفكرة. كل
+            snippet هنا مأخوذ بروح الكود الأصلي، لكن بصورة مختصرة وواضحة.
+          </p>
+
+          <div class="snippet-grid">
+            <article class="snippet">
+              <div class="snippet-head">
+                <h3>1. أبسط tokenizer ممكن</h3>
+                <button class="copy-btn" data-copy="code-tokenizer">انسخ</button>
+              </div>
+              <pre><code id="code-tokenizer">chars = sorted(list(set(text)))
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+
+def encode(s):
+    return [stoi[c] for c in s]
+
+def decode(ids):
+    return "".join(itos[i] for i in ids)</code></pre>
+            </article>
+
+            <article class="snippet">
+              <div class="snippet-head">
+                <h3>2. تكوين batch من x و y</h3>
+                <button class="copy-btn" data-copy="code-batch">انسخ</button>
+              </div>
+              <pre><code id="code-batch">def get_batch(split):
+    data = train_data if split == "train" else val_data
+    ix = torch.randint(len(data) - block_size, (batch_size,))
+    x = torch.stack([data[i:i + block_size] for i in ix])
+    y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
+    return x, y</code></pre>
+            </article>
+
+            <article class="snippet">
+              <div class="snippet-head">
+                <h3>3. attention مع القناع السببي</h3>
+                <button class="copy-btn" data-copy="code-attention">انسخ</button>
+              </div>
+              <pre><code id="code-attention">wei = q @ k.transpose(-2, -1) * (head_size ** -0.5)
+wei = wei.masked_fill(tril[:T, :T] == 0, float("-inf"))
+wei = F.softmax(wei, dim=-1)
+out = wei @ v</code></pre>
+            </article>
+
+            <article class="snippet">
+              <div class="snippet-head">
+                <h3>4. التوليد token بعد token</h3>
+                <button class="copy-btn" data-copy="code-generate">انسخ</button>
+              </div>
+              <pre><code id="code-generate">idx_cond = idx[:, -block_size:]
+logits, _ = model(idx_cond)
+probs = F.softmax(logits[:, -1, :], dim=-1)
+idx_next = torch.multinomial(probs, num_samples=1)
+idx = torch.cat((idx, idx_next), dim=1)</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>من نسخة Shakespeare إلى GPT-2 ثم GPT-3</h2>
+          <p>
+            النقطة الرائعة هنا أن النسخة التعليمية ليست لعبة مختلفة عن النماذج الكبرى. هي الوصفة نفسها تقريبًا،
+            لكن بحجم أصغر وtokenizer أبسط وداتا أقل بكثير. لهذا يبدو فيديو Karpathy كأنه يريك الهيكل العظمي
+            قبل أن ترتدي عليه الصناعة طبقات هائلة من scale.
+          </p>
+
+          <div class="compare">
+            <article class="compare-card">
+              <h3>نسخة الفيديو</h3>
+              <p>نسخة تعليمية مصغرة كي تتضح الفكرة قبل دخول البنية التحتية الثقيلة.</p>
+              <ul>
+                <li>Character-level tokenizer بسيط جدًا.</li>
+                <li>Dataset صغيرة: Tiny Shakespeare.</li>
+                <li>Karpathy يذكر أن نسخة الشرح كانت في حدود 10M parameters تقريبًا.</li>
+              </ul>
+            </article>
+
+            <article class="compare-card">
+              <h3>GPT-2</h3>
+              <p>الانتقال الطبيعي التالي: نفس الفكرة لكن على بيانات وتمثيل لغوي أفضل.</p>
+              <ul>
+                <li>استخدام subword tokens بدل الأحرف المنفردة.</li>
+                <li>تدوينة OpenAI الأصلية عرضت GPT-2 كاملًا بحجم 1.5B parameter.</li>
+                <li>مستودع build-nanogpt يركّز على استنساخ نسخة GPT-2 الصغيرة 124M.</li>
+              </ul>
+            </article>
+
+            <article class="compare-card">
+              <h3>GPT-3 وما بعده</h3>
+              <p>هنا تصبح الوصفة نفسها مشروعًا صناعيًا عملاقًا أكثر من كونها درسًا تعليميًا.</p>
+              <ul>
+                <li>ورقة GPT-3 تتحدث عن 175B parameters.</li>
+                <li>المقارنة في الفيديو تشير إلى قفزة من مئات آلاف tokens إلى مئات المليارات.</li>
+                <li>بعد pretraining تأتي مرحلة alignment كي يتصرف النموذج كمساعد.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>لماذا هذا الفيديو مهم فعلًا؟</h2>
+          <p>
+            لأنه يغيّر نوع الأسئلة التي تطرحها. بدل "كيف أصبح عندي ChatGPT خاص بي غدًا؟" يبدأ السؤال الصحي:
+            كيف يتكون نموذج اللغة أصلًا؟ ما وظيفة tokenizer؟ لماذا نحتاج positional embeddings؟ ما الذي يفعله
+            المثلث في attention؟ وما الفرق بين نموذج يكمل نصًا ونموذج يتصرف كمساعد؟
+          </p>
+          <p>
+            هذه الأسئلة هي التي تبني الفهم الطويل. وعندما تراجع بعد ذلك ورقة
+            <a href="https://openai.com/index/better-language-models/">GPT-2</a> أو ورقة
+            <a href="https://arxiv.org/abs/2005.14165">GPT-3</a> أو مقالات
+            <a href="https://openai.com/index/instruction-following/">InstructGPT</a>، ستلاحظ أن اللغة لم تعد
+            غامضة كما كانت. ستعرف أين تقف كل فكرة في السلسلة.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>الخلاصة: الصندوق الأسود صار ورشة عمل</h2>
+          <p>
+            لو أردت تلخيص المقال كله في جملة واحدة، فهي هذه: <strong>GPT ليس معجزة منفصلة عن البرمجة، بل
+            سلسلة قرارات هندسية متراكمة</strong>. نختار تمثيل النص، نحدد النافذة السياقية، نسمح للتوكنات
+            بالتواصل، نمنعها من رؤية المستقبل، ثم نكرر البلوك وندرّب.
+          </p>
+          <p>
+            وهذا بالضبط ما يجعل فيديو Karpathy ممتازًا: هو لا يبيعك انبهارًا مجانيًا، بل يعطيك مفكًا ومفاتيح
+            ربط. بعد ذلك قد تبني نسخة أصغر، أو تجرّب tokenizer مختلفًا، أو تنتقل إلى
+            <a href="https://github.com/openai/gpt-2">gpt-2</a> و<a href="https://github.com/karpathy/build-nanogpt">build-nanogpt</a>
+            لتقترب أكثر من النماذج الكبرى. المهم أن الطريق لم يعد غامضًا.
+          </p>
+        </section>
+
+        <section class="sources">
+          <h2>المصادر والمراجع</h2>
+          <ol>
+            <li>
+              <a href="https://www.youtube.com/watch?v=kCc8FmEb1nY">Let&apos;s build GPT: from scratch, in code, spelled out.</a>
+              الفيديو الأصلي لـ Andrej Karpathy، وهو المصدر الأساسي لترتيب الخطوات وروح الشرح العملي.
+            </li>
+            <li>
+              <a href="https://ytscribe.com/v/kCc8FmEb1nY/">YTScribe Transcript for the video</a>
+              نسخة نصية مفيدة لمراجعة تسلسل الشرح والتفاصيل الدقيقة عندما تريد العودة إلى جزء بعينه بسرعة.
+            </li>
+            <li>
+              <a href="https://github.com/karpathy/build-nanogpt">karpathy/build-nanogpt</a>
+              المستودع الذي يرافق الشرح ويعرض البناء التدريجي للنموذج مع ربط مباشر باستنساخ GPT-2 الصغير.
+            </li>
+            <li>
+              <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>
+              الورقة التي قدمت Transformer وشرحت self-attention، وهي الخلفية النظرية الحقيقية لكل القصة.
+            </li>
+            <li>
+              <a href="https://openai.com/index/better-language-models/">Better language models and their implications</a>
+              تدوينة OpenAI الأصلية حول GPT-2، مفيدة لفهم هدف "توقع الكلمة التالية" وحجم النموذج والبيانات.
+            </li>
+            <li>
+              <a href="https://github.com/openai/gpt-2">openai/gpt-2</a>
+              كود وREADME مرتبطان بورقة GPT-2، مفيدان لرؤية كيف تظهر الفكرة نفسها في مشروع بحثي كامل.
+            </li>
+            <li>
+              <a href="https://github.com/openai/tiktoken">openai/tiktoken</a>
+              مرجع عملي لفهم الفرق بين tokenizer تعليمي قائم على الأحرف وبين tokenization الحديثة في نماذج GPT.
+            </li>
+            <li>
+              <a href="https://arxiv.org/abs/2005.14165">Language Models are Few-Shot Learners</a>
+              ورقة GPT-3 التي توضّح معنى scaling حين ينتقل نفس التصميم إلى مئات المليارات من المعاملات.
+            </li>
+            <li>
+              <a href="https://openai.com/index/instruction-following/">Aligning language models to follow instructions</a>
+              مرجع مهم لفهم المرحلة التي تأتي بعد pretraining حين نريد من النموذج أن يتصرف كمساعد لا كمولد نصوص فقط.
+            </li>
+          </ol>
+        </section>
+
+        <div class="footer-note">
+          directed-slop — مقال عربي تقني تفاعلي، بتصميم أحادي اللون وشرح مبسط.
+        </div>
+      </main>
+
+      <aside class="side">
+        <section class="side-card">
+          <h3>الخريطة السريعة</h3>
+          <ul>
+            <li>النص الخام: اجمع corpus صغيرًا وواضحًا.</li>
+            <li>الترميز: حوّل الأحرف إلى ids ثم إلى batches.</li>
+            <li>التمثيل: embeddings للرمز وللموضع.</li>
+            <li>اللب: masked self-attention ثم feed-forward.</li>
+            <li>النتيجة: train، generate، ثم scale وalignment.</li>
+          </ul>
+        </section>
+
+        <section class="side-card">
+          <h3>أربع كلمات مفتاحية</h3>
+          <ul>
+            <li><strong>Token:</strong> أصغر وحدة يتعامل معها النموذج.</li>
+            <li><strong>Block size:</strong> طول نافذة الماضي المسموح بها.</li>
+            <li><strong>Embedding:</strong> تمثيل عددي dense للرمز أو موضعه.</li>
+            <li><strong>Logits:</strong> الدرجات الخام قبل تحويلها إلى احتمالات.</li>
+          </ul>
+        </section>
+
+        <section class="side-card">
+          <h3>إذا خرجت بثلاث أفكار</h3>
+          <ul>
+            <li>GPT يتعلم عبر توقع الرمز التالي، لا عبر فهم سحري غامض.</li>
+            <li>attention هو طريقة انتقائية لتجميع السياق، لا مجرد كلمة رائجة.</li>
+            <li>ChatGPT يضيف فوق GPT مرحلة alignment، لا بنية مختلفة بالكامل.</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const copyButtons = document.querySelectorAll("[data-copy]");
+    copyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const code = document.getElementById(button.dataset.copy);
+        if (!code) return;
+
+        const originalLabel = button.textContent;
+        try {
+          await navigator.clipboard.writeText(code.innerText);
+          button.textContent = "تم النسخ";
+        } catch (error) {
+          button.textContent = "انسخ يدويًا";
+        }
+
+        window.setTimeout(() => {
+          button.textContent = originalLabel;
+        }, 1200);
+      });
+    });
+
+    const demoTokens = ["أنا", "أبني", "GPT", "رمزًا", "بعد", "رمز"];
+    const tokenRow = document.getElementById("tokenRow");
+    const matrix = document.getElementById("matrix");
+    const range = document.getElementById("tokenRange");
+    const rangeValue = document.getElementById("rangeValue");
+    const demoText = document.getElementById("demoText");
+
+    function renderDemo(activeIndex) {
+      range.value = activeIndex;
+      rangeValue.textContent = String(activeIndex + 1);
+
+      tokenRow.innerHTML = "";
+      demoTokens.forEach((token, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "token";
+
+        if (index < activeIndex) button.classList.add("is-visible");
+        if (index === activeIndex) button.classList.add("is-current");
+        if (index > activeIndex) button.classList.add("is-hidden");
+
+        button.textContent = token;
+        button.addEventListener("click", () => renderDemo(index));
+        tokenRow.appendChild(button);
+      });
+
+      matrix.innerHTML = "";
+      demoTokens.forEach((_, row) => {
+        const rowElement = document.createElement("div");
+        rowElement.className = "matrix-row";
+
+        demoTokens.forEach((__, col) => {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+
+          if (col <= row) {
+            cell.classList.add("faint");
+          }
+          if (row === activeIndex && col <= row) {
+            cell.classList.remove("faint");
+            cell.classList.add("on");
+          }
+
+          rowElement.appendChild(cell);
+        });
+
+        matrix.appendChild(rowElement);
+      });
+
+      const visible = demoTokens.slice(0, activeIndex + 1).join("، ");
+      const hidden = demoTokens.slice(activeIndex + 1).join("، ");
+      demoText.textContent =
+        "الرمز الحالي هو " +
+        demoTokens[activeIndex] +
+        ". بسبب causal mask يمكنه أن ينظر فقط إلى: " +
+        visible +
+        (hidden ? ". ولا يحق له رؤية: " + hidden + "." : ". لا يوجد مستقبل بعد هذه النقطة.");
+    }
+
+    range.addEventListener("input", (event) => {
+      renderDemo(Number(event.target.value));
+    });
+
+    renderDemo(Number(range.value));
+  </script>
+</body>
+</html>
